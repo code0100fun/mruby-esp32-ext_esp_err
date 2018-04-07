@@ -2,7 +2,7 @@
 #include <esp_err.h>
 
 void mrb_esp32_ext_esp_err_gem_init(mrb_state* mrb) {
-  struct RClass *mrb_esp32, *mrb_esp32_i2c, *mrb_esp32_intr, *mrb_i2c_intr_handle, *mrb_esp32_i2c_config, *mrb_esp32_i2c_cmd_handle;
+  struct RClass *mrb_esp32;
 
   /* ESP32 */
   mrb_esp32 = mrb_define_module(mrb, "ESP32");
