@@ -1,11 +1,30 @@
 #include <mruby.h>
+#include <mruby/error.h>
+#include <mruby/variable.h>
 #include <esp_err.h>
 
-void mrb_esp32_ext_esp_err_gem_init(mrb_state* mrb) {
-  struct RClass *mrb_esp32;
+#define mrb_esp32_eError(mrb) (mrb_class_get_under(mrb, mrb_module_get(mrb, "ESP32"), "Error"))
+
+MRB_API mrb_noreturn void mrb_raise_esp32_err(mrb_state *mrb, esp_err_t code) {
+  char err_msg[20];
+  mrb_value exc = mrb_exc_new_str(mrb, mrb_esp32_eError(mrb), mrb_str_new_cstr(mrb, esp_err_to_name_r(code, err_msg, sizeof(err_msg))));
+  mrb_iv_set(mrb, exc, mrb_intern_lit(mrb, "code"), mrb_fixnum_value((mrb_int)code));
+  mrb_exc_raise(mrb, exc);
+}
+
+MRB_API mrb_value mrb_esp32_err_code(mrb_state *mrb, mrb_value self) {
+  return mrb_iv_get(mrb, self, mrb_intern_lit(mrb, "code"));
+}
+
+void mrb_esp32_ext_esp_err_gem_init(mrb_state *mrb) {
+  struct RClass *mrb_esp32, *mrb_esp32_err;
 
   /* ESP32 */
   mrb_esp32 = mrb_define_module(mrb, "ESP32");
+
+  /* ESP32::Error */
+  mrb_esp32_err = mrb_define_class_under(mrb, mrb_esp32, "Error", mrb->eStandardError_class);
+  mrb_define_method(mrb, mrb_esp32_err, "code", mrb_esp32_err_code, MRB_ARGS_NONE());
 
   /* esp_err_t */
   mrb_define_const(mrb, mrb_esp32, "OK", mrb_fixnum_value(ESP_OK));
